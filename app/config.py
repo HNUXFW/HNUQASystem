@@ -6,13 +6,10 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "校园智能问答系统"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
-    
-    # 获取项目根目录
-    BASE_DIR: Path = Path(__file__).parent.parent.absolute()
-    
+
     # 文档相关配置
-    DOCS_DIR: Path = BASE_DIR / "data" / "docs"
-    VECTOR_DIR: Path = BASE_DIR / "data" / "vectors"
+    DOCS_DIR: Path = "../data/docs"
+    VECTOR_DIR: Path = "../data/vectors"
     CHUNK_SIZE: int = 500
     CHUNK_OVERLAP: int = 50
     
