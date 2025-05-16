@@ -26,38 +26,35 @@ git clone [项目地址]
 cd [项目目录]
 ```
 
-2. 创建虚拟环境：
-```bash
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
-```
 
-3. 安装依赖：
+2.安装依赖：
+为了避免库之间冲突，最好使用conda进行管理：
 ```bash
-pip install -r requirements.txt
+conda env create -f environment.yml
 ```
-
-4. 配置环境变量：
-创建 `.env` 文件并设置以下变量：
+paraphrase-multilingual-MiniLM-L12-v2模型，采用国内镜像安装：
+```bash
+https://gitcode.com/hf_mirrors/ai-gitcode/paraphrase-multilingual-MiniLM-L12-v2
 ```
-OPENAI_API_KEY=your_api_key_here
+zh_core_web_sm模型下载命令：
+```bash
+python -m spacy download zh_core_web_sm
 ```
 
 ## 使用说明
 
 1. 准备文档：
-   - 在 `data/docs` 目录下放置文本文档（.txt 格式）
+   - 在 `data/docs` 目录下放置文本文档（.txt/.doc/.docx/.pdf 格式）
    - 文档应包含校园相关的 FAQ、规章制度等内容
 
 2. 启动服务：
 ```bash
-python -m app.main
+python main.py
 ```
 
 3. 访问系统：
-   - 打开浏览器访问 http://localhost:8000
-   - 在输入框中输入问题
+   - 打开浏览器访问 http://localhost:8000/docs
+   - 在相关API中输入问题
    - 系统会返回相关答案和参考来源
 
 ## 目录结构
@@ -80,16 +77,10 @@ python -m app.main
 ```
 
 ## 注意事项
-
 - 确保文档格式正确（UTF-8 编码的 .txt 文件）
-- 需要有效的 OpenAI API 密钥
 - 首次启动时会自动构建向量索引，可能需要一些时间
 - 建议定期更新文档和重建索引以保持信息最新
 
 ## 贡献指南
-
 欢迎提交 Issue 和 Pull Request 来改进系统。
 
-## 许可证
-
-MIT License 
