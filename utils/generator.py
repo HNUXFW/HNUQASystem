@@ -1,12 +1,13 @@
 from typing import List, Dict
 import requests
+
+from config import settings
+
+
 class Generator:
-    def __init__(self):
-        # 本地模型路径配置，使用ollama进行配置
-        self.ollama_url = "http://localhost:11434/api/chat"  # Ollama默认API地址
-        self.model_name = "deepseek-r1:7b"  # 确保已通过ollama pull deepseek-r1:7b下载该模型
+
     def generate_response(self, query: str, relevant_docs: List[Dict]) -> str:
-        """生成回答（Ollama API版本）"""
+        """生成回答（讯飞星火大模型 API版本）"""
         # 构建系统提示词
         system_prompt = """你是一个校园智能问答助手。请基于提供的相关文档信息，回答用户的问题。
              注意事项：
@@ -24,33 +25,31 @@ class Generator:
             {
                 "role": "system",
                 "content": system_prompt,
-                "images": []
             },
             {
                 "role": "user",
                 "content": f"基于以下文档信息回答问题：\n{context}\n\n用户问题：{query}",
-                "images": []
             }
         ]
 
         try:
-            # 调用Ollama API
+
             response = requests.post(
-                self.ollama_url,
+                settings.llm_url,
                 json={
-                    "model": self.model_name,
+                    "model": settings.model_name,
                     "messages": messages,
-                    "options": {
-                        "temperature": 0.7,
-                        "num_predict": 500  # 相当于max_tokens
-                    },
                     "stream": False  # 非流式响应
+                },
+                headers={
+                    "Authorization": f"Bearer {settings.api_password}"
                 },
                 timeout=120  # 超时设置为2分钟
             )
 
             if response.status_code == 200:
-                return response.json()["message"]["content"]
+                print(response.json())
+                return response.json()["choices"][0]["message"]["content"]
             else:
                 error_msg = f"API请求失败，状态码：{response.status_code}"
                 if response.text:

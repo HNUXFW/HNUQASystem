@@ -1,6 +1,5 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
-from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from fastapi import Request
@@ -13,16 +12,16 @@ async def lifespan(app:FastAPI):
     try:
         print("开始加载文档和索引...")
         # 确保必要的目录存在
-        settings.DOCS_DIR.mkdir(parents=True, exist_ok=True)
-        settings.VECTOR_DIR.mkdir(parents=True, exist_ok=True)
+        settings.docs_dir.mkdir(parents=True, exist_ok=True)
+        settings.vector_dir.mkdir(parents=True, exist_ok=True)
 
         # 尝试加载现有索引，如果不存在则构建新索引
-        index_path = settings.VECTOR_DIR / "faiss_index"
+        index_path = settings.vector_dir / "faiss_index"
         print(f"现有索引: {index_path}")
         if index_path.exists():
             doc_processor.load_index(index_path)
         else:
-            doc_processor.process_documents(settings.DOCS_DIR)
+            doc_processor.process_documents(settings.docs_dir)
             doc_processor.build_index()
             doc_processor.save_index(index_path)
         yield
@@ -32,8 +31,8 @@ async def lifespan(app:FastAPI):
         raise
 
 app = FastAPI(
-    title=settings.PROJECT_NAME,
-    version=settings.VERSION,
+    title=settings.project_name,
+    version=settings.version,
     description="校园智能问答系统API文档",
     docs_url="/docs",   # Swagger UI 的URL
     redoc_url="/redoc" , # ReDoc 的URL
@@ -61,7 +60,7 @@ async def read_root(request: Request):
     """渲染主页"""
     return templates.TemplateResponse(
         "index.html",
-        {"request": request, "title": settings.PROJECT_NAME}
+        {"request": request, "title": settings.project_name}
     )
 
 
@@ -82,16 +81,14 @@ async def qa_endpoint(query: str):
         
         # 生成回答
         response = generator.generate_response(query, relevant_docs)
+        sources=[]
+        for doc in relevant_docs:
+            if doc["source"] not in sources:
+                sources.append(doc["source"])
         
         return {
             "answer": response,
-            "sources": [
-                {
-                    "text": doc["text"],
-                    "source": doc["source"]
-                }
-                for doc in relevant_docs
-            ]
+            "sources": sources
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

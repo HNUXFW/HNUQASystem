@@ -15,7 +15,7 @@
 - FastAPI: Web 框架
 - Sentence-Transformers: 文本向量化
 - FAISS: 向量检索
-- OpenAI API: 答案生成
+- 讯飞星火 API: 答案生成
 - TailwindCSS: 前端样式
 
 ## 安装说明
@@ -54,7 +54,7 @@ python main.py
 ```
 
 3. 访问系统：
-   - 打开浏览器访问 http://localhost:8000/docs
+   - 打开浏览器访问 http://localhost:8000
    - 在相关API中输入问题
    - 系统会返回相关答案和参考来源
 
@@ -63,25 +63,22 @@ python main.py
 ```
 .
 ├── app/
-│   ├── app.py             # FastAPI 应用
-│   ├── config.py          # 配置文件
 │   ├── document_processor.py  # 文档处理模块
 │   ├── generator.py       # 答案生成模块
-│   └── main.py           # 主程序
 ├── data/
 │   ├── docs/             # 文档存储目录
 │   └── vectors/          # 向量索引存储目录
-├── static/               # 静态文件
-├── templates/            # HTML 模板
-├── requirements.txt      # 项目依赖
-└── README.md            # 项目说明
+│—— config/               # 配置文件
+├── templates/            # HTML模板
+|—— main.py               # 主程序
+├── app.py                # FastAPI 应用
+├── README.md            # 项目说明
+├── environment.yml      # 虚拟环境配置
+└── .env                 # 环境变量
 ```
 
 ## 注意事项
-- 确保文档格式正确（UTF-8 编码的 .txt 文件）
 - 首次启动时会自动构建向量索引，可能需要一些时间
 - 建议定期更新文档和重建索引以保持信息最新
 
-## 贡献指南
-欢迎提交 Issue 和 Pull Request 来改进系统。
 
