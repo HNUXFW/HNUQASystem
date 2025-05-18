@@ -1,111 +1,123 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title }}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
         .chat-container {
-            height: 60vh;
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 20px;
-            margin-bottom: 20px;
+            height: calc(100vh - 180px);
         }
         .message {
-            margin-bottom: 15px;
-            padding: 10px;
-            border-radius: 5px;
+            max-width: 80%;
+            margin: 8px;
+            padding: 12px;
+            border-radius: 12px;
         }
         .user-message {
             background-color: #e3f2fd;
-            margin-left: 20%;
+            margin-left: auto;
         }
         .bot-message {
             background-color: #f5f5f5;
-            margin-right: 20%;
-        }
-        .source {
-            font-size: 0.8em;
-            color: #666;
-            margin-top: 5px;
+            margin-right: auto;
         }
     </style>
 </head>
-<body>
-    <div class="container mt-5">
-        <h1 class="text-center mb-4">{{ title }}</h1>
-        <div class="chat-container" id="chatContainer">
-            <div class="message bot-message">
-                欢迎使用校园智能问答系统！请输入您的问题。
-            </div>
-        </div>
-        <div class="input-group mb-3">
-            <input type="text" class="form-control" id="questionInput" placeholder="请输入您的问题...">
-            <button class="btn btn-primary" id="sendButton">发送</button>
-        </div>
-    </div>
+<body class="bg-gray-100">
+    <div x-data="{
+        messages: [],
+        newMessage: '',
+        loading: false,
 
-    <script>
-        const chatContainer = document.getElementById('chatContainer');
-        const questionInput = document.getElementById('questionInput');
-        const sendButton = document.getElementById('sendButton');
+        async sendMessage() {
+            if (!this.newMessage.trim()) return;
 
-        async function sendQuestion() {
-            const question = questionInput.value.trim();
-            if (!question) return;
-
-            // 添加用户问题到聊天界面
-            appendMessage(question, 'user');
-            questionInput.value = '';
+            const userMessage = this.newMessage;
+            this.messages.push({
+                text: userMessage,
+                isUser: true
+            });
+            this.newMessage = '';
+            this.loading = true;
 
             try {
-                // 发送请求到后端
-                const response = await fetch('/api/v1/qa', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ query: question })
+                const response = await axios.post('/api/v1/qa', null, {
+                    params: {
+                        query: userMessage
+                    }
                 });
 
-                const data = await response.json();
-                
-                // 添加机器人回答到聊天界面
-                appendMessage(data.answer, 'bot', data.sources);
+                this.messages.push({
+                    text: response.data.answer,
+                    isUser: false,
+                    sources: response.data.sources
+                });
             } catch (error) {
-                appendMessage('抱歉，发生了错误，请稍后重试。', 'bot');
                 console.error('Error:', error);
+                this.messages.push({
+                    text: '抱歉，发生了错误，请稍后重试。',
+                    isUser: false
+                });
+            } finally {
+                this.loading = false;
             }
         }
+    }" class="container mx-auto px-4 py-8 max-w-4xl">
 
-        function appendMessage(text, type, sources = []) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${type}-message`;
-            messageDiv.textContent = text;
+        <h1 class="text-3xl font-bold text-center mb-8">智能问答系统</h1>
 
-            if (sources && sources.length > 0) {
-                const sourcesDiv = document.createElement('div');
-                sourcesDiv.className = 'source';
-                sourcesDiv.innerHTML = '来源：' + sources.map(s => 
-                    `<div>${s.source}</div>`
-                ).join('');
-                messageDiv.appendChild(sourcesDiv);
-            }
+        <!-- 聊天记录区域 -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-4">
+            <div class="chat-container overflow-y-auto">
+                <template x-if="messages.length === 0">
+                    <div class="text-center text-gray-500 mt-8">
+                        👋 你好！我是你的智能助手，请问有什么可以帮你的吗？
+                    </div>
+                </template>
 
-            chatContainer.appendChild(messageDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
+                <template x-for="(message, index) in messages" :key="index">
+                    <div :class="{'message': true, 'user-message': message.isUser, 'bot-message': !message.isUser}">
+                        <div x-text="message.text"></div>
+                        <template x-if="message.sources">
+                            <div class="mt-2 text-sm text-gray-600">
+                                <div class="font-semibold">参考来源：</div>
+                                <template x-for="(source, idx) in message.sources" :key="idx">
+                                    <div class="ml-2" x-text="source.source"></div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </template>
 
-        sendButton.addEventListener('click', sendQuestion);
-        questionInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendQuestion();
-            }
-        });
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+                <div x-show="loading" class="flex items-center justify-center py-4">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 输入区域 -->
+        <div class="bg-white rounded-lg shadow-lg p-4">
+            <form @submit.prevent="sendMessage" class="flex gap-2">
+                <input
+                    type="text"
+                    x-model="newMessage"
+                    class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="请输入你的问题..."
+                    :disabled="loading"
+                >
+                <button
+                    type="submit"
+                    class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                    :disabled="loading || !newMessage.trim()"
+                >
+                    发送
+                </button>
+            </form>
+        </div>
+    </div>
 </body>
-</html> 
+</html>
