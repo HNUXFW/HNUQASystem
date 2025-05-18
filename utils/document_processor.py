@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 from sentence_transformers import SentenceTransformer
 import faiss
-from app.config import settings
+from config import settings
 import fitz
 import spacy
 import cv2
@@ -115,34 +115,63 @@ class DocumentProcessor:
         print("构建向量索引完成")
         
     def save_index(self, path: Path) -> None:
-        """保存索引到文件"""
+        """保存索引和文档数据到文件"""
         if self.index is None:
             raise ValueError("No index built yet")
         path.parent.mkdir(parents=True, exist_ok=True)
+        
+        # 保存FAISS索引
         faiss.write_index(self.index, str(path))
+        
+        # 保存documents数据到同目录下的json文件
+        import json
+        docs_path = path.parent / "documents.json"
+        with open(docs_path, 'w', encoding='utf-8') as f:
+            json.dump(self.documents, f, ensure_ascii=False, indent=2)
+        
         print(f"向量索引已保存到: {path}")
+        print(f"文档数据已保存到: {docs_path}")
         
     def load_index(self, path: Path) -> None:
-        """从文件加载索引"""
+        """从文件加载索引和文档数据"""
         if not path.exists():
             raise FileNotFoundError(f"Index file not found: {path}")
+            
+        # 加载FAISS索引
         self.index = faiss.read_index(str(path))
         
+        # 加载documents数据
+        import json
+        docs_path = path.parent / "documents.json"
+        if not docs_path.exists():
+            raise FileNotFoundError(f"Documents data not found: {docs_path}")
+            
+        with open(docs_path, 'r', encoding='utf-8') as f:
+            self.documents = json.load(f)
+            
+        print(f"已加载向量索引，包含 {len(self.documents)} 个文档片段")
+
     def search(self, query: str, k: int = None) -> List[Dict]:
         """搜索最相关的文档片段"""
         if self.index is None:
             raise ValueError("No index built yet")
-            
-        k = k or settings.TOP_K
-        query_vector = self.model.encode([query])
-        distances, indices = self.index.search(np.array(query_vector).astype('float32'), k)
-        
-        results = []
-        for idx in indices[0]:
-            if idx != -1:  # FAISS可能返回-1表示无效结果
-                results.append(self.documents[idx])
-        return results 
 
+        # if len(self.index) == 0:
+        #     print("此时没有chunks，请先生成chunks")
+        #     return []  # 如果没有文档，直接返回空列表
+
+        k = min(k or settings.TOP_K, self.index.ntotal)  # 确保k不超过文档数量
+        print(f"此时的找到的最相关的chunks数量为: {k}")
+        query_vector = self.model.encode([query])
+        #这里返回与query最相似的k个文档片段的距离数组和索引数组
+        distances, indices = self.index.search(np.array(query_vector).astype('float32'), k)
+
+        results = []
+        if len(indices) > 0:  # 确保indices不为空
+            for idx in indices[0]:
+                if idx != -1:  # FAISS可能返回-1表示无效结果
+                    results.append(self.documents[idx])
+        return results
     def _process_image_content(self, image_data: bytes, image_ext: str) -> Dict[str, any]:
         """处理图片内容，返回提取的文字和图片类型"""
 
@@ -157,13 +186,20 @@ class DocumentProcessor:
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             edges = cv2.Canny(gray, 50, 150)
             contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            
-            # 检查是否存在规则的几何形状（矩形、菱形等）
+
+            flowchart_shapes = 0
+            total_shapes = 0
+
             for contour in contours:
+                if cv2.contourArea(contour) < 500:  # 忽略太小的形状
+                    continue
+                total_shapes += 1
                 approx = cv2.approxPolyDP(contour, 0.04 * cv2.arcLength(contour, True), True)
-                if len(approx) in [4, 6, 8]:  # 流程图常见的形状边数
-                    return True
-            return False
+                if len(approx) in [4, 6, 8]:
+                    flowchart_shapes += 1
+
+            # 如果流程图形状占比超过30%且总形状数大于3才认为是流程图
+            return total_shapes > 3 and (flowchart_shapes / total_shapes) > 0.3
 
         # 图片预处理
         def preprocess_image(img):

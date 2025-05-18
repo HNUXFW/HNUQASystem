@@ -2,19 +2,12 @@ from typing import List, Dict
 import requests
 class Generator:
     def __init__(self):
-        # 本地模型路径配置
-        # model_path = "deepseek-ai/deepseek-llm-7b-chat"  # 替换实际模型路径
-        # self.tokenizer = AutoTokenizer.from_pretrained(model_path)
-        # self.model = AutoModelForCausalLM.from_pretrained(
-        #     model_path,
-        #     torch_dtype=torch.float16,
-        #     device_map="auto"
-        # ).eval()
+        # 本地模型路径配置，使用ollama进行配置
         self.ollama_url = "http://localhost:11434/api/chat"  # Ollama默认API地址
-        self.model_name = "deepseek-r1:7b"  # 确保已通过`ollama pull deepseek-llm:7b-chat`下
+        self.model_name = "deepseek-r1:7b"  # 确保已通过ollama pull deepseek-r1:7b下载该模型
     def generate_response(self, query: str, relevant_docs: List[Dict]) -> str:
         """生成回答（Ollama API版本）"""
-        # 构建系统提示词（保持不变）
+        # 构建系统提示词
         system_prompt = """你是一个校园智能问答助手。请基于提供的相关文档信息，回答用户的问题。
              注意事项：
              1. 只回答与校园相关的问题
@@ -22,7 +15,7 @@ class Generator:
              3. 保持回答准确、简洁、专业
              4. 不要编造信息或做出未经证实的承诺"""
 
-        # 构建上下文（保持不变）
+        # 添加获取的上下文
         context = "\n\n".join([f"文档片段 {i + 1}:\n{doc['text']}"
                                for i, doc in enumerate(relevant_docs)])
 
@@ -31,7 +24,7 @@ class Generator:
             {
                 "role": "system",
                 "content": system_prompt,
-                "images": []  # Ollama支持多模态，文本对话保持为空列表
+                "images": []
             },
             {
                 "role": "user",

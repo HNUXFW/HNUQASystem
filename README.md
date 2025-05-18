@@ -34,12 +34,13 @@ conda env create -f environment.yml
 ```
 paraphrase-multilingual-MiniLM-L12-v2模型，采用国内镜像安装：
 ```bash
-https://gitcode.com/hf_mirrors/ai-gitcode/paraphrase-multilingual-MiniLM-L12-v2
+git clone https://gitcode.com/hf_mirrors/ai-gitcode/paraphrase-multilingual-MiniLM-L12-v2
 ```
 zh_core_web_sm模型下载命令：
 ```bash
 python -m spacy download zh_core_web_sm
 ```
+此外，还需要解决tesseract 问题。具体参考https://developer.aliyun.com/article/1528694
 
 ## 使用说明
 
@@ -62,11 +63,11 @@ python main.py
 ```
 .
 ├── app/
-│   ├── __init__.py
+│   ├── app.py             # FastAPI 应用
 │   ├── config.py          # 配置文件
 │   ├── document_processor.py  # 文档处理模块
 │   ├── generator.py       # 答案生成模块
-│   └── main.py           # FastAPI 应用
+│   └── main.py           # 主程序
 ├── data/
 │   ├── docs/             # 文档存储目录
 │   └── vectors/          # 向量索引存储目录
