@@ -5,8 +5,8 @@ from config import settings
 
 
 class Generator:
-
-    def generate_response(self, query: str, relevant_docs: List[Dict]) -> str:
+    @staticmethod
+    def generate_response(query: str, relevant_docs: List[Dict]) -> str:
         """生成回答（讯飞星火大模型 API版本）"""
         # 构建系统提示词
         system_prompt = """你是一个校园智能问答助手。请基于提供的相关文档信息，回答用户的问题。

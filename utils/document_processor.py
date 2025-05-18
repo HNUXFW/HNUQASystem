@@ -20,7 +20,6 @@ class DocumentProcessor:
         """处理目录下的所有文本、PDF和Word文件"""
         self.documents = []
         nlp = spacy.load("zh_core_web_sm")
-        print(f"进入该函数{docs_dir}")
         for file_path in docs_dir.glob("**/*"):
             try:
                 print(f"开始处理文件: {file_path}")
@@ -43,7 +42,7 @@ class DocumentProcessor:
                     for i, chunk in enumerate(text_chunks):
                         self.documents.append({
                             "text": chunk,
-                            "source": str(file_path),
+                            "source": file_path.name,
                             "chunk_id": f"text_{i}",
                             "type": "text"
                         })
@@ -53,7 +52,7 @@ class DocumentProcessor:
                     if img['extracted_text']:
                         self.documents.append({
                             "text": img['extracted_text'],
-                            "source": str(file_path),
+                            "source": file_path.name,
                             "chunk_id": f"image_{i}",
                             "type": img['type'],
                             "page_num": img.get('page_num', 1)
@@ -100,7 +99,7 @@ class DocumentProcessor:
 
     
     def build_index(self) -> None:
-        """构建向量索引"""
+        """构建向量索引，使用余弦相似度"""
         print("开始构建向量索引...")
         if not self.documents:
             raise ValueError("No documents processed yet")
@@ -108,9 +107,12 @@ class DocumentProcessor:
         # 获取文档嵌入
         embeddings = self.model.encode([doc["text"] for doc in self.documents])
         
-        # 构建FAISS索引
+        # 归一化向量
+        embeddings = embeddings / np.linalg.norm(embeddings, axis=1)[:, np.newaxis]
+        
+        # 构建FAISS索引 - 使用内积（等价于余弦相似度，因为向量已归一化）
         dimension = embeddings.shape[1]
-        self.index = faiss.IndexFlatL2(dimension)
+        self.index = faiss.IndexFlatIP(dimension)  # 改用IndexFlatIP
         self.index.add(np.array(embeddings).astype('float32'))
         print("构建向量索引完成")
         
@@ -156,21 +158,24 @@ class DocumentProcessor:
         if self.index is None:
             raise ValueError("No index built yet")
 
-        # if len(self.index) == 0:
-        #     print("此时没有chunks，请先生成chunks")
-        #     return []  # 如果没有文档，直接返回空列表
-
-        k = min(k or settings.top_k, self.index.ntotal)  # 确保k不超过文档数量
+        k = min(k or settings.top_k, self.index.ntotal)
+        
+        # 编码并归一化查询向量
         query_vector = self.model.encode([query])
-        #这里返回与query最相似的k个文档片段的距离数组和索引数组
-        distances, indices = self.index.search(np.array(query_vector).astype('float32'), k)
-
+        query_vector = query_vector / np.linalg.norm(query_vector)
+        
+        # 使用内积搜索，得到的分数越高表示越相似
+        scores, indices = self.index.search(np.array(query_vector).astype('float32'), k)
+        
         results = []
-        if len(indices) > 0:  # 确保indices不为空
-            for idx in indices[0]:
-                if idx != -1:  # FAISS可能返回-1表示无效结果
-                    results.append(self.documents[idx])
+        if len(indices) > 0:
+            for idx, score in zip(indices[0], scores[0]):
+                if idx != -1:
+                    doc = self.documents[idx].copy()
+                    doc['similarity_score'] = float(score)  # 添加相似度分数
+                    results.append(doc)
         return results
+
     def _process_image_content(self, image_data: bytes, image_ext: str) -> Dict[str, any]:
         """处理图片内容，返回提取的文字和图片类型"""
 

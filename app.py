@@ -39,7 +39,7 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# 配置CORS
+# 配置CORS 避免跨域请求
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -48,12 +48,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 挂载静态文件
+#配置模板引擎，用于渲染主页
 templates = Jinja2Templates(directory="templates")
 
 # 初始化文档处理器和生成器
 doc_processor = DocumentProcessor()
-generator = Generator()
+
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
@@ -78,9 +78,10 @@ async def qa_endpoint(query: str):
     try:
         # 检索相关文档
         relevant_docs = doc_processor.search(query)
+        print(relevant_docs)
         
         # 生成回答
-        response = generator.generate_response(query, relevant_docs)
+        response = Generator.generate_response(query, relevant_docs)
         sources=[]
         for doc in relevant_docs:
             if doc["source"] not in sources:
