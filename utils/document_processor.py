@@ -12,7 +12,7 @@ from docx import Document
 
 class DocumentProcessor:
     def __init__(self):
-        self.model = SentenceTransformer(settings.EMBEDDING_MODEL)
+        self.model = SentenceTransformer(settings.embedding_model)
         self.index = None
         self.documents: List[Dict] = []
 
@@ -160,8 +160,7 @@ class DocumentProcessor:
         #     print("此时没有chunks，请先生成chunks")
         #     return []  # 如果没有文档，直接返回空列表
 
-        k = min(k or settings.TOP_K, self.index.ntotal)  # 确保k不超过文档数量
-        print(f"此时的找到的最相关的chunks数量为: {k}")
+        k = min(k or settings.top_k, self.index.ntotal)  # 确保k不超过文档数量
         query_vector = self.model.encode([query])
         #这里返回与query最相似的k个文档片段的距离数组和索引数组
         distances, indices = self.index.search(np.array(query_vector).astype('float32'), k)
@@ -267,7 +266,7 @@ class DocumentProcessor:
             sent_length = len(sent_text)
             
             # 如果单个句子就超过了块大小，则需要进行分词切分
-            if sent_length > settings.CHUNK_SIZE:
+            if sent_length > settings.chunk_size:
                 # 如果当前chunk不为空，先保存
                 if current_chunk:
                     chunks.append(" ".join(current_chunk))
@@ -280,7 +279,7 @@ class DocumentProcessor:
                 temp_length = 0
                 
                 for word in words:
-                    if temp_length + len(word) < settings.CHUNK_SIZE:
+                    if temp_length + len(word) < settings.chunk_size:
                         temp_chunk.append(word)
                         temp_length += len(word)
                     else:
@@ -293,7 +292,7 @@ class DocumentProcessor:
                 continue
             
             # 正常句子处理
-            if current_length + sent_length < settings.CHUNK_SIZE:
+            if current_length + sent_length < settings.chunk_size:
                 current_chunk.append(sent_text)
                 current_length += sent_length
             else:
