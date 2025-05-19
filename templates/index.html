@@ -91,6 +91,19 @@
             }
         },
 
+        getRecentHistory() {
+            // 获取最近3条对话记录
+            const history = [];
+            const recentMessages = this.messages.slice(-6); // 获取最近6条消息（3轮对话）
+            for (const msg of recentMessages) {
+                history.push({
+                    content: msg.text,
+                    role: msg.isUser ? 'user' : 'assistant'
+                });
+            }
+            return history;
+        },
+
         async sendMessage() {
             if (!this.newMessage.trim()) return;
 
@@ -103,10 +116,9 @@
             this.loading = true;
 
             try {
-                const response = await axios.post('/api/v1/qa', null, {
-                    params: {
-                        query: userMessage
-                    }
+                const response = await axios.post('/api/v1/qa', {
+                    query: userMessage,
+                    history: this.getRecentHistory()
                 });
 
                 console.log('API Response:', response.data);
