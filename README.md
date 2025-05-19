@@ -23,9 +23,7 @@
 1. 克隆项目：
 ```bash
 git clone [项目地址]
-cd [项目目录]
 ```
-
 
 2.安装依赖：
 为了避免库之间冲突，最好使用conda进行管理：
@@ -36,11 +34,8 @@ paraphrase-multilingual-MiniLM-L12-v2模型，采用国内镜像安装：
 ```bash
 git clone https://gitcode.com/hf_mirrors/ai-gitcode/paraphrase-multilingual-MiniLM-L12-v2
 ```
-zh_core_web_sm模型下载命令：
-```bash
-python -m spacy download zh_core_web_sm
-```
-此外，还需要解决tesseract 问题。具体参考https://developer.aliyun.com/article/1528694
+之后将.env中的EMBEDDING_MODEL替换为模型路径
+此外，还需要解决tesseract问题。具体参考https://developer.aliyun.com/article/1528694
 
 ## 使用说明
 
@@ -55,8 +50,8 @@ python main.py
 
 3. 访问系统：
    - 打开浏览器访问 http://localhost:8000
-   - 在相关API中输入问题
-   - 系统会返回相关答案和参考来源
+   - 在网页中输入问题
+   - 系统会返回相关答案和参考来源，注意由于使用的是免费的API，结果可能会不准确
 
 ## 目录结构
 
@@ -80,5 +75,6 @@ python main.py
 ## 注意事项
 - 首次启动时会自动构建向量索引，并且由于我添加了对于图片的识别，所以对于图片很多的文档，构建索引时间会比较长。
 - 建议定期更新文档和重建索引以保持信息最新
+- 由于采用的chunk的划分，搜索的信息可能出现割裂，导致结果不准确。此外，从pdf中识别信息，还存在一些换行的问题
 
 

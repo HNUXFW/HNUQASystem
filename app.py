@@ -1,11 +1,12 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Body
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from fastapi import Request
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
 from utils import DocumentProcessor,Generator
+from typing import List, Dict
 
 @asynccontextmanager
 async def lifespan(app:FastAPI):
@@ -66,23 +67,34 @@ async def read_root(request: Request):
 
 
 @app.post("/api/v1/qa")
-async def qa_endpoint(query: str):
+async def qa_endpoint(
+    request: Dict = Body(...)
+):
     """问答接口
     
     Args:
-        query (str): 用户的问题
+        request (Dict): 包含查询和历史记录的请求体
+            - query (str): 用户的问题
+            - history (List[Dict]): 对话历史记录
+                - content (str): 消息内容
+                - role (str): 角色（user/assistant）
         
     Returns:
         dict: 包含答案和相关文档来源的响应
     """
     try:
+        query = request.get("query", "")
+        history = request.get("history", [])
+        
+        if not query:
+            raise HTTPException(status_code=400, detail="Query is required")
+            
         # 检索相关文档
         relevant_docs = doc_processor.search(query)
-        print(relevant_docs)
         
         # 生成回答
-        response = Generator.generate_response(query, relevant_docs)
-        sources=[]
+        response = Generator.generate_response(query, relevant_docs, history)
+        sources = []
         for doc in relevant_docs:
             if doc["source"] not in sources:
                 sources.append(doc["source"])

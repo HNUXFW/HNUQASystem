@@ -6,8 +6,29 @@ from config import settings
 
 class Generator:
     @staticmethod
-    def generate_response(query: str, relevant_docs: List[Dict]) -> str:
-        """生成回答（讯飞星火大模型 API版本）"""
+    def format_history(history: List[Dict]) -> str:
+        """格式化对话历史记录"""
+        if not history:
+            return ""
+            
+        formatted_history = "\n对话历史：\n"
+        for msg in history:
+            role = "用户" if msg["role"] == "user" else "助手"
+            formatted_history += f"{role}：{msg['content']}\n"
+        return formatted_history
+
+    @staticmethod
+    def generate_response(query: str, relevant_docs: List[Dict], history: List[Dict] = None) -> str:
+        """生成回答
+        
+        Args:
+            query (str): 用户的问题
+            relevant_docs (List[Dict]): 相关文档列表
+            history (List[Dict], optional): 对话历史记录
+            
+        Returns:
+            str: 生成的回答
+        """
         # 构建系统提示词
         system_prompt = """你是一个校园智能问答助手。请基于提供的相关文档信息，回答用户的问题。
              注意事项：
@@ -20,6 +41,16 @@ class Generator:
         context = "\n\n".join([f"文档片段 {i + 1}:\n{doc['text']}"
                                for i, doc in enumerate(relevant_docs)])
 
+        # 添加对话历史
+        history_text = Generator.format_history(history) if history else ""
+        
+        # 构建完整的提示词
+        prompt = f"""请基于以下信息回答用户的问题。如果无法从提供的信息中找到答案，请明确说明。
+                历史信息：{history_text}
+                相关文档：{context}
+                当前问题：{query}
+                请用简洁、专业的语言回答问题，并确保回答的准确性。如果需要引用具体内容，请说明来源。"""
+
         # 构建Ollama所需的对话格式
         messages = [
             {
@@ -28,7 +59,7 @@ class Generator:
             },
             {
                 "role": "user",
-                "content": f"基于以下文档信息回答问题：\n{context}\n\n用户问题：{query}",
+                "content": prompt,
             }
         ]
 
