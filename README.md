@@ -40,7 +40,7 @@ git clone https://gitcode.com/hf_mirrors/ai-gitcode/paraphrase-multilingual-Mini
 ## 使用说明
 
 1. 准备文档：
-   - 在 `data/docs` 目录下放置文本文档（.txt/.doc/.docx/.pdf 格式）
+   - 在 `data/docs` 目录下放置文本文档（.txt/.docx/.pdf 格式）
    - 文档应包含校园相关的 FAQ、规章制度等内容
 
 2. 启动服务：
@@ -71,9 +71,12 @@ python main.py
 ├── environment.yml      # 虚拟环境配置
 └── .env                 # 环境变量
 ```
+## 最终结果
+![image](https://github.com/user-attachments/assets/c9444f6e-cc9d-41a9-8eb8-11370608ebaa)
+
 
 ## 注意事项
-- 首次启动时会自动构建向量索引，并且由于我添加了对于图片的识别，所以对于图片很多的文档，构建索引时间会比较长。
+- 首次启动时会自动构建向量索引，并且由于添加了对于图片的识别，所以对于图片很多的文档，构建索引时间会比较长。
 - 建议定期更新文档和重建索引以保持信息最新
 - 由于采用的chunk的划分，搜索的信息可能出现割裂，导致结果不准确。此外，从pdf中识别信息，还存在一些换行的问题
 
