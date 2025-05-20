@@ -91,6 +91,7 @@ async def qa_endpoint(
             
         # 检索相关文档
         relevant_docs = doc_processor.search(query)
+
         
         # 生成回答
         response = Generator.generate_response(query, relevant_docs, history)
@@ -98,7 +99,7 @@ async def qa_endpoint(
         for doc in relevant_docs:
             if doc["source"] not in sources:
                 sources.append(doc["source"])
-        
+        print(f"返回检索到的答案:{relevant_docs}")
         return {
             "answer": response,
             "sources": sources

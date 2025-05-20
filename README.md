@@ -34,7 +34,7 @@ paraphrase-multilingual-MiniLM-L12-v2模型，采用国内镜像安装：
 ```bash
 git clone https://gitcode.com/hf_mirrors/ai-gitcode/paraphrase-multilingual-MiniLM-L12-v2
 ```
-之后将.env中的EMBEDDING_MODEL替换为模型路径
+之后将.env中的EMBEDDING_MODEL替换为模型路径。
 此外，还需要解决tesseract问题。具体参考https://developer.aliyun.com/article/1528694
 
 ## 使用说明
