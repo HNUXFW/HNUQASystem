@@ -276,9 +276,7 @@ class DocumentProcessor:
         """搜索最相关的文档片段"""
         if self.index is None:
             raise ValueError("No index built yet")
-
-        k = min(k or settings.top_k, self.index.ntotal)
-        
+        k=min(k or settings.top_k, self.index.ntotal)
         # 编码并归一化查询向量
         query_vector = self.model.encode([query])
         query_vector = query_vector / np.linalg.norm(query_vector)
@@ -295,65 +293,4 @@ class DocumentProcessor:
                     results.append(doc)
         return results
 
-    # def _preprocess_text(self, text: str) -> str:
-    #     """预处理文本，处理换行符问题"""
-    #     lines = text.split('\n')
-    #     processed_lines = []
-    #     current_line = []
-    #
-    #     for line in lines:
-    #         line = line.strip()
-    #         if not line:  # 空行表示段落分隔
-    #             if current_line:
-    #                 processed_lines.append(''.join(current_line))
-    #                 current_line = []
-    #             processed_lines.append('')
-    #             continue
-    #
-    #         # 判断是否应该与前一行合并
-    #         should_merge = False
-    #         if current_line:
-    #             # 如果当前行以小写字母开头，可能是上一句的继续
-    #             if line and line[0].islower():
-    #                 should_merge = True
-    #             # 如果上一行以非标点符号结尾，可能需要与当前行合并
-    #             last_line = current_line[-1]
-    #             if last_line and not any(last_line.endswith(p) for p in '。！？.!?'):
-    #                 should_merge = True
-    #
-    #         if should_merge:
-    #             current_line.append(line)
-    #         else:
-    #             #如果不应该合并，则将当前行加入结果并重置当前行
-    #             if current_line:
-    #                 processed_lines.append(''.join(current_line))
-    #             current_line = [line]
-    #     #处理剩余的行
-    #     if current_line:
-    #         processed_lines.append(''.join(current_line))
-
-        # return '\n'.join(processed_lines)
-
-
-    # def _semantic_split(self, text: str, nlp) -> List[str]:
-    #     """使用递归字符分块方法进行文本分块"""
-    #     # 首先预处理文本，得到处理之后的文本
-    #     text = self._preprocess_text(text)
-    #
-    #     # 使用递归分块方法
-    #     chunks = self._recursive_split(text, settings.chunk_size)
-    #
-    #     # 过滤空块并确保每个块都不超过最大大小
-    #     filtered_chunks = []
-    #     for chunk in chunks:
-    #         if chunk and len(chunk.strip()) > 0:
-    #             # 如果chunk仍然超过最大大小，进行强制切分
-    #             if len(chunk) > settings.chunk_size:
-    #                 sub_chunks = [chunk[i:i + settings.chunk_size]
-    #                             for i in range(0, len(chunk), settings.chunk_size)]
-    #                 filtered_chunks.extend(sub_chunks)
-    #             else:
-    #                 filtered_chunks.append(chunk)
-    #
-    #     return filtered_chunks
 
