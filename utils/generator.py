@@ -51,7 +51,7 @@ class Generator:
                 当前问题：{query}
                 请用简洁、专业的语言回答问题，并确保回答的准确性。如果需要引用具体内容，请说明来源。"""
 
-        # 构建Ollama所需的对话格式
+        # 构建API所需的对话格式
         messages = [
             {
                 "role": "system",

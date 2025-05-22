@@ -92,9 +92,10 @@
         },
 
         getRecentHistory() {
-            // 获取最近3条对话记录
+            // 获取最近3条对话记录，但不包括刚刚发送的消息
             const history = [];
-            const recentMessages = this.messages.slice(-6); // 获取最近6条消息（3轮对话）
+            // 排除最后一条消息（即刚刚发送的消息）
+            const recentMessages = this.messages.slice(-7, -1); // 获取最近6条消息（3轮对话）
             for (const msg of recentMessages) {
                 history.push({
                     content: msg.text,
